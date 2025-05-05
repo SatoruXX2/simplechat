@@ -1,7 +1,8 @@
 # lambda/index.py
 import json
 import os
-import boto3
+#import boto3
+import requests
 import re  # 正規表現モジュールをインポート
 from botocore.exceptions import ClientError
 
@@ -83,14 +84,20 @@ def lambda_handler(event, context):
         print("Calling Bedrock invoke_model API with payload:", json.dumps(request_payload))
         
         # invoke_model APIを呼び出し
-        response = bedrock_client.invoke_model(
-            modelId=MODEL_ID,
-            body=json.dumps(request_payload),
-            contentType="application/json"
+        #response = bedrock_client.invoke_model(
+        #    modelId=MODEL_ID,
+        #    body=json.dumps(request_payload),
+        #    contentType="application/json"
+        #)
+        API_URL = "https://bf2d-34-143-245-143.ngrok-free.app"
+        response = requests.post(
+            API_URL,
+            json=request_payload,
+            headers={"Content-Type": "application/json"}
         )
-        
         # レスポンスを解析
-        response_body = json.loads(response['body'].read())
+        #response_body = json.loads(response['body'].read())
+        response_body = response.json()
         print("Bedrock response:", json.dumps(response_body, default=str))
         
         # 応答の検証
@@ -98,7 +105,8 @@ def lambda_handler(event, context):
             raise Exception("No response content from the model")
         
         # アシスタントの応答を取得
-        assistant_response = response_body['output']['message']['content'][0]['text']
+        # assistant_response = response_body['output']['message']['content'][0]['text']
+        assistant_response = response_body["response"]
         
         # アシスタントの応答を会話履歴に追加
         messages.append({
